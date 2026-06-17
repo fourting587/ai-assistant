@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  # ─── AI 智能助理后端 ───
+  app:
+    build: .
+    container_name: ai-assistant
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=Asia/Shanghai
+      - LLM_PROVIDER=${LLM_PROVIDER:-deepseek}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_MODEL_NAME=${DEEPSEEK_MODEL_NAME:-deepseek-v4-flash}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com/v1}
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    depends_on:
+      - ollama
+
+  # ─── Ollama 本地模型（可选） ───
+  # 如果使用本地模型，取消下面的注释
+  # 并在 .env 中设置 LLM_PROVIDER=ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    profiles:
+      - local  # 默认不启动，执行 docker compose --profile local up 才启动
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
