@@ -96,6 +96,10 @@ async function loadSessions() {
     const resp = await fetch(`${API_BASE}/api/sessions`);
     const data = await resp.json();
     renderSessions(data.sessions);
+    // 自动选中最近的会话
+    if (data.sessions.length > 0 && currentSessionId === "default") {
+      switchSession(data.sessions[0].id);
+    }
   } catch (e) { console.warn("加载会话失败:", e); }
 }
 
