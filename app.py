@@ -35,6 +35,25 @@ assistant = Assistant(tools)
 app = FastAPI(title="🧠 AI 智能助理", version="1.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+# ── 全局异常处理 ──
+class AppException(Exception):
+    def __init__(self, message: str, status: int = 400):
+        self.message = message
+        self.status = status
+
+@app.exception_handler(AppException)
+async def app_exception_handler(request, exc: AppException):
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=exc.status, content={"error": exc.message})
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    from fastapi.responses import JSONResponse
+    import traceback
+    print(f"❌ 未捕获异常: {exc}\n{traceback.format_exc()}")
+    return JSONResponse(status_code=500, content={"error": f"服务器内部错误: {type(exc).__name__}"})
+
+
 # ── 数据模型 ──
 class ChatRequest(BaseModel):
     message: str
