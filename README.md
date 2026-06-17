@@ -1,5 +1,7 @@
 # 🧠 AI 智能助理 — 带长期记忆的全栈应用
 
+[![CI](https://github.com/fourting587/ai-assistant/actions/workflows/test.yml/badge.svg)](https://github.com/fourting587/ai-assistant/actions/workflows/test.yml)
+
 基于 **LangChain + LangGraph + FastAPI** 的 AI 助手，支持**长期记忆**（增删改查）、**天气查询** 和 **自然语言对话**，提供 REST API 和 Web 界面。
 
 ## 功能
@@ -7,59 +9,59 @@
 | 功能 | 说明 |
 |------|------|
 | 🧠 **长期记忆** | 自动记住用户信息，支持增删改查和搜索 |
+| 💬 **多会话管理** | 创建/切换/删除对话，历史持久化 |
 | 🌤️ **天气查询** | 查询任意城市实时天气（免费，无需 API Key） |
-| 💬 **自然语言** | AI 自主决定何时调用工具，支持流式打字机效果 |
-| 🔄 **对话记忆** | 同一会话内上下文连贯 |
-| 🔌 **多模型** | OpenAI / Claude / Ollama 本地模型一键切换 |
-| 🌐 **Web 界面** | 美观的聊天界面 + 记忆管理面板 |
+| 🔍 **联网搜索** | Bing 搜索获取最新信息 |
+| 📁 **文件上传** | 上传 TXT/PDF/代码等，AI 读取分析 |
+| 💬 **流式输出** | 逐 token 打字机效果 |
+| 🔌 **多模型** | DeepSeek / OpenAI / Claude / Ollama 一键切换 |
+| 🌐 **Web 界面** | 美观的聊天界面 + 记忆/会话管理面板 |
 
-## 快速开始
+## 🐳 Docker 一键部署（推荐）
+
+```bash
+# 1. 配置 API Key
+cp .env.example .env
+# 编辑 .env 填入 DEEPSEEK_API_KEY
+
+# 2. 启动
+docker compose up -d
+
+# 3. 访问 http://localhost:8000
+```
+
+使用 Ollama 本地模型：
+```bash
+docker compose --profile local up -d
+docker exec ollama ollama pull qwen2.5
+# .env: LLM_PROVIDER=ollama
+docker compose restart app
+```
+
+## 🚀 本地运行
 
 ### 1. 安装
-
 ```bash
 cd ai-assistant
 pip install -r requirements.txt
 ```
 
 ### 2. 配置
-
 ```bash
 cp .env.example .env
-```
-
-编辑 `.env`：
-
-```env
-# OpenAI（推荐）
-LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-your-key-here
-
-# 或 Anthropic Claude
-# LLM_PROVIDER=anthropic
-# ANTHROPIC_API_KEY=sk-ant-your-key
-
-# 或 Ollama 本地模型（免费）
-# LLM_PROVIDER=ollama
-# OLLAMA_MODEL=qwen2.5
+# 编辑 .env 填入 API Key
 ```
 
 ### 3. 运行
-
 ```bash
-# 启动 FastAPI 后端（自动提供 Web 界面）
 python app.py
+# 访问 http://localhost:8000
 ```
 
-打开浏览器访问 **http://localhost:8000**
+## 🧪 运行测试
 
-### 无需 API Key？
-
-安装 [Ollama](https://ollama.com) 后拉取模型即可：
 ```bash
-ollama pull qwen2.5
-# .env 里设置 LLM_PROVIDER=ollama
-python app.py
+python -m pytest tests/ -v
 ```
 
 ## Web 界面截图预览
