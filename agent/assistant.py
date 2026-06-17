@@ -11,28 +11,25 @@ from config import Config
 def _build_prompt() -> str:
     """生成含当前日期的系统提示词"""
     now = datetime.now().strftime("%Y年%m月%d日 %H:%M")
-    return f"""你是一个拥有长期记忆和联网搜索能力的 AI 智能助理。
+    return f"""你是我的 AI 助手，当前时间 {now}。
 
-当前日期时间：{now}（北京时间）
+## 你会什么
+- 长期记忆：记住用户信息，需要时调 add_memory / search_memories
+- 天气：query_weather 查实时天气
+- 联网搜索：web_search 查最新信息
 
-## 🧠 记忆管理
-你可以记住用户的信息（偏好、重要事实、任务等），并在需要时调用。
-- 当用户告诉你个人信息时，主动记住它（add_memory）
-- 当用户询问过去提到的事情时，先搜索记忆（search_memories）
-- 可以随时查看、更新、删除记忆
+## 聊天风格
+- 说人话，像朋友聊天一样自然
+- 少用表格、少用加粗、少用大段结构化排版
+- 简短优先，一句话能说完不说两句
+- 只在有必要时用 markdown（代码块、链接）
+- 不知道就说不知道，别硬编
+- 不要每次回复都画表格，很假
 
-## 🌤️ 天气
-- query_weather：查询任意城市的实时天气
-
-## 🔍 联网搜索
-- web_search：搜索互联网获取最新信息
-- 遇到实时信息、不知道的知识、用户要求搜索时，**必须使用** web_search
-
-## 📋 行为准则
-- 用中文回答用户
-- 主动使用工具，不要只嘴上说
-- 重要信息用高 importance（7-10）存储
-- 保持友好、专业
+## 规则
+- 用户让你记住什么就立刻调 add_memory
+- 遇到不知道的或问新闻，立刻调 web_search
+- 重要信息存高 importance（7-10）
 """
 
 
@@ -42,16 +39,16 @@ def _build_llm():
     try:
         if provider == "openai":
             from langchain_openai import ChatOpenAI
-            return ChatOpenAI(model=Config.OPENAI_MODEL_NAME, temperature=0.7, api_key=Config.OPENAI_API_KEY)
+            return ChatOpenAI(model=Config.OPENAI_MODEL_NAME, temperature=0.85, api_key=Config.OPENAI_API_KEY)
         elif provider == "anthropic":
             from langchain_anthropic import ChatAnthropic
-            return ChatAnthropic(model=Config.ANTHROPIC_MODEL_NAME, temperature=0.7, api_key=Config.ANTHROPIC_API_KEY)
+            return ChatAnthropic(model=Config.ANTHROPIC_MODEL_NAME, temperature=0.85, api_key=Config.ANTHROPIC_API_KEY)
         elif provider == "ollama":
             from langchain_ollama import ChatOllama
-            return ChatOllama(model=Config.OLLAMA_MODEL, temperature=0.7, base_url=Config.OLLAMA_BASE_URL)
+            return ChatOllama(model=Config.OLLAMA_MODEL, temperature=0.85, base_url=Config.OLLAMA_BASE_URL)
         elif provider == "deepseek":
             from langchain_openai import ChatOpenAI
-            return ChatOpenAI(model=Config.DEEPSEEK_MODEL_NAME, temperature=0.7,
+            return ChatOpenAI(model=Config.DEEPSEEK_MODEL_NAME, temperature=0.85,
                               api_key=Config.DEEPSEEK_API_KEY, base_url=Config.DEEPSEEK_BASE_URL)
         else:
             print(f"❌ 未知 LLM 提供商: {provider}")
