@@ -549,3 +549,81 @@ function showSetupGuide() {
 }
 
 init();
+
+// ═══════════════════════════════════════════════
+//  📚 知识库
+// ═══════════════════════════════════════════════
+
+const kbUploadBtn = $("#kbUploadBtn");
+const kbFileInput = $("#kbFileInput");
+const kbStatus = $("#kbStatus");
+const kbList = $("#kbList");
+const kbFooter = $("#kbFooter");
+
+// 侧边栏 Tab 切换
+$$(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    $$(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    $$(".tab-content").forEach(t => t.classList.add("hidden"));
+    const tab = document.getElementById("tab" + btn.dataset.tab.replace(/^./, c => c.toUpperCase()));
+    if (tab) tab.classList.remove("hidden");
+    if (btn.dataset.tab === "knowledge") loadKnowledge();
+  });
+});
+
+async function loadKnowledge() {
+  try {
+    const resp = await fetch(`${API_BASE}/api/knowledge`);
+    const data = await resp.json();
+    renderKnowledge(data.documents, data.stats);
+  } catch (e) { console.warn(e); }
+}
+
+function renderKnowledge(docs, stats) {
+  kbList.innerHTML = "";
+  if (!docs || docs.length === 0) {
+    kbList.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📚</div><p>知识库为空<br/>上传文档建立知识库</p></div>`;
+  } else {
+    for (const d of docs) {
+      const div = document.createElement("div");
+      div.className = "kb-doc";
+      div.innerHTML = `
+        <div class="kb-doc-info">
+          <div class="kb-doc-title">${escapeHtml(d.title)}</div>
+          <div class="kb-doc-meta">${d.chunk_count} 段 · ${(d.total_chars/1024).toFixed(0)}KB</div>
+        </div>
+        <button class="kb-doc-del" data-id="${d.id}">✕</button>`;
+      div.querySelector(".kb-doc-del").onclick = async e => {
+        e.stopPropagation();
+        if (!confirm("删除此文档？")) return;
+        await fetch(`${API_BASE}/api/knowledge/${d.id}`, { method: "DELETE" });
+        loadKnowledge();
+      };
+      kbList.appendChild(div);
+    }
+  }
+  if (kbFooter) {
+    const c = stats?.documents || 0;
+    const ch = stats?.chunks || 0;
+    kbFooter.textContent = c ? `📚 ${c} 篇文档 · ${ch} 个文本段` : "";
+  }
+}
+
+kbUploadBtn.addEventListener("click", () => kbFileInput.click());
+kbFileInput.addEventListener("change", async () => {
+  const file = kbFileInput.files[0];
+  if (!file) return;
+  kbStatus.textContent = `📤 正在上传 ${file.name}...`;
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const resp = await fetch(`${API_BASE}/api/knowledge/upload`, { method: "POST", body: fd });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    kbStatus.textContent = `✅ ${file.name} 已加入知识库`;
+    kbFileInput.value = "";
+    loadKnowledge();
+  } catch (e) {
+    kbStatus.textContent = `❌ ${e.message}`;
+  }
+});

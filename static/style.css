@@ -729,3 +729,22 @@ body {
   .header-title { display: none; }
   .model-select { max-width: 110px; font-size: 11px; padding: 5px 24px 5px 10px; }
 }
+
+/* ─── 侧边栏 Tab ─── */
+.sidebar-header h2 { font-size:15px; font-weight:600; letter-spacing:-.2px; }
+.sidebar-tabs { display:flex; gap:4px; }
+.tab-btn { padding:6px 12px; border:none; background:none; border-radius:var(--radius-xs); cursor:pointer; font-size:13px; color:var(--text-muted); transition:all .15s; }
+.tab-btn:hover { color:var(--text); background:var(--surface-hover); }
+.tab-btn.active { color:var(--primary); background:var(--primary-bg); font-weight:500; }
+.tab-content.hidden { display:none; }
+.kb-upload-area { padding:12px 16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.kb-upload-btn { padding:8px 16px; background:var(--gradient); color:#fff; border:none; border-radius:var(--radius-xs); cursor:pointer; font-size:13px; font-weight:500; transition:all .2s; box-shadow:var(--shadow-glow); }
+.kb-upload-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px var(--primary-glow); }
+.kb-status { font-size:12px; color:var(--text-muted); }
+.kb-doc { padding:10px 12px; margin-bottom:4px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; }
+.kb-doc-info { flex:1; overflow:hidden; }
+.kb-doc-title { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.kb-doc-meta { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.kb-doc-del { background:none; border:none; font-size:16px; cursor:pointer; padding:4px; border-radius:4px; color:var(--text-muted); opacity:0; transition:all .1s; }
+.kb-doc:hover .kb-doc-del { opacity:1; }
+.kb-doc-del:hover { background:#fef2f2; color:#ef4444; }
