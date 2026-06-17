@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 AI 智能助理</title>
+<link rel="stylesheet" href="style.css">
+<!-- 使用系统字体，避免 Google Fonts 加载慢 -->
+</head>
+<body>
+
+<!-- ─── 顶部导航栏 ─── -->
+<header class="header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebarToggle" title="记忆面板">☰</button>
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <span class="header-title">AI 助理</span>
+    </div>
+  </div>
+  <div class="header-center">
+    <span class="memory-badge" id="memoryBadge">💾 0 条记忆</span>
+  </div>
+  <div class="header-right">
+    <select class="model-select" id="modelSelect">
+      <optgroup label="DeepSeek">
+        <option value="deepseek/deepseek-v4-flash" selected>DeepSeek V4 Flash</option>
+        <option value="deepseek/deepseek-v4-pro">DeepSeek V4 Pro</option>
+      </optgroup>
+      <optgroup label="OpenAI">
+        <option value="openai/gpt-4o-mini">GPT-4o-mini</option>
+        <option value="openai/gpt-4o">GPT-4o</option>
+      </optgroup>
+      <optgroup label="Anthropic">
+        <option value="anthropic/claude-sonnet">Claude Sonnet</option>
+        <option value="anthropic/claude-haiku">Claude Haiku</option>
+      </optgroup>
+      <optgroup label="本地模型">
+        <option value="ollama/qwen2.5">Qwen2.5 (Ollama)</option>
+        <option value="ollama/deepseek-r1">DeepSeek-R1 (Ollama)</option>
+      </optgroup>
+    </select>
+    <button class="icon-btn" id="clearBtn" title="清空对话">🗑️</button>
+  </div>
+</header>
+
+<!-- ─── 主体 ─── -->
+<div class="main-container">
+
+  <!-- ─── 侧边栏：记忆面板 ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>🧠 记忆 <span class="mem-count" id="memCountLabel">· 0 条</span></h2>
+      <button class="icon-btn" id="closeSidebar">✕</button>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="memorySearch" placeholder="搜索记忆..." />
+    </div>
+    <div class="sidebar-add-form">
+      <input type="text" id="newMemoryInput" placeholder="添加新记忆..." />
+      <select id="newMemoryType">
+        <option value="general">一般</option>
+        <option value="user_info">用户信息</option>
+        <option value="preference">偏好</option>
+        <option value="fact">事实</option>
+        <option value="task">任务</option>
+      </select>
+      <button class="add-btn" id="addMemoryBtn">+</button>
+    </div>
+    <div class="sidebar-list" id="memoryList">
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <p>还没有任何记忆<br/>在对话中让 AI 记住信息，或手动添加</p>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <span id="memoryCount">📝 0 条记忆</span>
+      <span>🧠 长期记忆</span>
+    </div>
+  </aside>
+
+  <!-- ─── 遮罩层（移动端） ─── -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ─── 对话区域 ─── -->
+  <main class="chat-area">
+
+    <!-- 消息列表 -->
+    <div class="messages" id="messages">
+      <div class="welcome-message">
+        <div class="welcome-icon">🧠</div>
+        <h2>你好！我是 AI 智能助理</h2>
+        <p>我拥有<strong>长期记忆</strong>、<strong>联网搜索</strong>和<strong>天气查询</strong>能力，随时为你服务</p>
+        <div class="welcome-suggestions">
+          <button class="suggestion-btn" data-msg="记住我喜欢喝冰美式，正在找实习">
+            📝 记住我喜欢喝冰美式
+          </button>
+          <button class="suggestion-btn" data-msg="今天北京天气怎么样？">
+            🌤️ 今天北京天气怎么样？
+          </button>
+          <button class="suggestion-btn" data-msg="搜索一下2026年最新科技趋势">
+            🔍 搜索最新科技趋势
+          </button>
+          <button class="suggestion-btn" data-msg="我记得什么关于我的信息？">
+            🧠 我记得什么关于我的信息？
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="chatInput"
+          rows="1"
+          placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+        ></textarea>
+        <button id="sendBtn" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-status" id="inputStatus"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── 编辑记忆弹窗 ─── -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <h3>✏️ 编辑记忆</h3>
+    <textarea id="editContent" rows="3"></textarea>
+    <div class="modal-row">
+      <select id="editType">
+        <option value="general">一般</option>
+        <option value="user_info">用户信息</option>
+        <option value="preference">偏好</option>
+        <option value="fact">事实</option>
+        <option value="task">任务</option>
+      </select>
+      <input type="number" id="editImportance" min="1" max="10" placeholder="重要性" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelEdit">取消</button>
+      <button class="btn-primary" id="saveEdit">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
