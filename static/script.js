@@ -343,6 +343,8 @@ async function sendMessage(message) {
             fullContent += data.content;
             if (!started) { started = true; removeTypingIndicator(); }
             updateStreaming(renderMarkdown(fullContent));
+            // 让出渲染线程实现打字机效果
+            await new Promise(r => setTimeout(r, 0));
           } else if (data.type === "done") {
             fullContent = data.content;
             finalizeStreaming(renderMarkdown(fullContent));

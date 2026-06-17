@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from config import Config
-from memory.store import MemoryStore
+from memory.store import MemoryStore, set_current_session
 from session_store import SessionStore
 from knowledge_store import KnowledgeStore
 from tools.memory_tools import get_memory_tools
@@ -59,6 +59,7 @@ async def chat_stream(req: ChatRequest):
     async def event_stream():
         full = ""
         try:
+            set_current_session(req.session_id)
             rag_ctx = knowledge_store.search_with_context(req.message, top_k=3)
             msg = f"{req.message}\n\n{rag_ctx}" if rag_ctx else req.message
             for chunk in assistant.stream_chat(msg, req.session_id):
@@ -74,6 +75,7 @@ async def chat_stream(req: ChatRequest):
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
+    set_current_session(req.session_id)
     try:
         rag_ctx = knowledge_store.search_with_context(req.message, top_k=3)
         msg = f"{req.message}\n\n{rag_ctx}" if rag_ctx else req.message

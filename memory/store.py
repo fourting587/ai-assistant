@@ -1,11 +1,27 @@
 """
 长期记忆存储层
 基于 SQLite，支持记忆的增删改查、分类和重要性评分
+支持按会话隔离（session_id）
 """
 import sqlite3
+import contextvars
 import os
 from datetime import datetime
 from typing import Optional
+
+
+# 线程本地存储当前会话 ID
+_current_session = contextvars.ContextVar("current_session", default="")
+
+
+def set_current_session(session_id: str):
+    """设置当前请求的会话 ID（由 API 层调用）"""
+    _current_session.set(session_id)
+
+
+def get_current_session() -> str:
+    """获取当前会话 ID"""
+    return _current_session.get()
 
 
 class MemoryStore:
@@ -24,20 +40,25 @@ class MemoryStore:
                     content     TEXT    NOT NULL,
                     memory_type TEXT    NOT NULL DEFAULT 'general',
                     importance  INTEGER NOT NULL DEFAULT 5 CHECK(importance BETWEEN 1 AND 10),
+                    session_id  TEXT    NOT NULL DEFAULT '',
                     created_at  TEXT    NOT NULL,
                     updated_at  TEXT    NOT NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(memory_type);
+                CREATE INDEX IF NOT EXISTS idx_memories_session ON memories(session_id);
                 CREATE INDEX IF NOT EXISTS idx_memories_importance ON memories(importance DESC);
             """)
+            # 兼容旧表：尝试添加 session_id 列
+            try:
+                conn.execute("ALTER TABLE memories ADD COLUMN session_id TEXT NOT NULL DEFAULT ''")
+            except sqlite3.OperationalError:
+                pass  # 列已存在
 
     @staticmethod
     def _dict_factory(cursor, row):
-        """将查询结果直接转为 dict"""
         return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
 
     def _get_conn(self):
-        """获取数据库连接（每次调用独立，避免线程问题）"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = self._dict_factory
         return conn
@@ -46,13 +67,14 @@ class MemoryStore:
 
     def add(self, content: str, memory_type: str = "general",
             importance: int = 5) -> dict:
-        """添加一条记忆"""
+        """添加一条记忆（自动绑定当前会话）"""
         now = datetime.now().isoformat()
+        session_id = get_current_session()
         with self._get_conn() as conn:
             cursor = conn.execute(
-                "INSERT INTO memories (content, memory_type, importance, created_at, updated_at) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (content, memory_type, importance, now, now),
+                "INSERT INTO memories (content, memory_type, importance, session_id, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (content, memory_type, importance, session_id, now, now),
             )
             row = conn.execute(
                 "SELECT * FROM memories WHERE id = ?", (cursor.lastrowid,)
@@ -60,7 +82,6 @@ class MemoryStore:
             return row
 
     def get(self, memory_id: int) -> Optional[dict]:
-        """根据 ID 获取单条记忆"""
         with self._get_conn() as conn:
             row = conn.execute(
                 "SELECT * FROM memories WHERE id = ?", (memory_id,)
@@ -69,7 +90,6 @@ class MemoryStore:
 
     def update(self, memory_id: int, content: str = None,
                memory_type: str = None, importance: int = None) -> Optional[dict]:
-        """更新记忆（只传需要修改的字段）"""
         updates = {"updated_at": datetime.now().isoformat()}
         if content is not None:
             updates["content"] = content
@@ -93,53 +113,60 @@ class MemoryStore:
             return row
 
     def delete(self, memory_id: int) -> bool:
-        """删除记忆"""
         with self._get_conn() as conn:
             cursor = conn.execute("DELETE FROM memories WHERE id = ?", (memory_id,))
             return cursor.rowcount > 0
 
-    # ─── 查询 ───────────────────────────────────────────
+    # ─── 查询（仅当前会话） ─────────────────────────
 
     def list_all(self, memory_type: str = None, limit: int = 50) -> list[dict]:
-        """列出所有记忆，可按类型过滤、按重要性降序"""
-        if memory_type:
-            rows = self._get_conn().execute(
-                "SELECT * FROM memories WHERE memory_type = ? "
-                "ORDER BY importance DESC, updated_at DESC LIMIT ?",
-                (memory_type, limit),
-            ).fetchall()
-        else:
-            rows = self._get_conn().execute(
-                "SELECT * FROM memories ORDER BY importance DESC, updated_at DESC LIMIT ?",
-                (limit,),
-            ).fetchall()
+        """列出当前会话的记忆"""
+        session_id = get_current_session()
+        with self._get_conn() as conn:
+            if memory_type:
+                rows = conn.execute(
+                    "SELECT * FROM memories WHERE session_id = ? AND memory_type = ? "
+                    "ORDER BY importance DESC, updated_at DESC LIMIT ?",
+                    (session_id, memory_type, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM memories WHERE session_id = ? "
+                    "ORDER BY importance DESC, updated_at DESC LIMIT ?",
+                    (session_id, limit),
+                ).fetchall()
         return rows
 
     def search(self, keyword: str, limit: int = 20) -> list[dict]:
-        """全文搜索记忆内容"""
+        """在当前会话中搜索记忆"""
+        session_id = get_current_session()
         rows = self._get_conn().execute(
-            "SELECT * FROM memories WHERE content LIKE ? "
+            "SELECT * FROM memories WHERE session_id = ? AND content LIKE ? "
             "ORDER BY importance DESC, updated_at DESC LIMIT ?",
-            (f"%{keyword}%", limit),
+            (session_id, f"%{keyword}%", limit),
         ).fetchall()
         return rows
 
-    # ─── 统计 ───────────────────────────────────────────
-
     def stats(self) -> dict:
-        """记忆统计"""
+        """记忆统计（仅当前会话）"""
+        session_id = get_current_session()
         with self._get_conn() as conn:
-            total_row = conn.execute("SELECT COUNT(*) AS cnt FROM memories").fetchone()
-            total = total_row["cnt"] if total_row else 0
-            by_type_rows = conn.execute(
-                "SELECT memory_type, COUNT(*) AS cnt FROM memories GROUP BY memory_type"
+            total = conn.execute(
+                "SELECT COUNT(*) AS cnt FROM memories WHERE session_id = ?",
+                (session_id,),
+            ).fetchone()["cnt"]
+            by_type = conn.execute(
+                "SELECT memory_type, COUNT(*) AS cnt FROM memories "
+                "WHERE session_id = ? GROUP BY memory_type",
+                (session_id,),
             ).fetchall()
             avg_row = conn.execute(
-                "SELECT AVG(importance) AS avg_imp FROM memories"
+                "SELECT AVG(importance) AS avg_imp FROM memories WHERE session_id = ?",
+                (session_id,),
             ).fetchone()
             avg_imp = avg_row["avg_imp"] if avg_row and avg_row["avg_imp"] else 0
         return {
             "total": total,
-            "by_type": {r["memory_type"]: r["cnt"] for r in by_type_rows},
+            "by_type": {r["memory_type"]: r["cnt"] for r in by_type},
             "avg_importance": round(avg_imp, 1),
         }
