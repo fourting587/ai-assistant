@@ -1,10 +1,8 @@
-# 🧠 AI 智能助理 — 带长期记忆的全栈应用
+# 🧠 智能对话助手 — 带长期记忆的全栈应用
 
 > **LangChain · LangGraph · FastAPI · SQLite · Docker**
 
 [![CI](https://github.com/fourting587/ai-assistant/actions/workflows/test.yml/badge.svg)](https://github.com/fourting587/ai-assistant/actions/workflows/test.yml)
-
----
 
 ---
 
@@ -18,9 +16,9 @@
                        SSE 流式输出
 ```
 
-- **Agent 循环**：ReAct (Reasoning + Acting) 模式，Agent 自主推理 → 调用工具 → 观察结果 → 生成回复
-- **记忆系统**：自动提取和存储用户信息，下次对话自动注入上下文，实现跨会话长期记忆
-- **多会话管理**：独立会话上下文，历史持久化到 SQLite，支持创建/切换/删除
+- **对话处理流程**：助手接收用户输入 → 自主判断是否需要调用工具 → 观察返回结果 → 组织回复
+- **记忆系统**：自动记住用户说过的话，下次对话时自动带入，跨会话不丢失
+- **多会话管理**：每次对话独立上下文，历史记录持久化到数据库，可随时切换
 
 ---
 
@@ -29,13 +27,13 @@
 | 功能 | 说明 |
 |------|------|
 | 🧠 **长期记忆** | 自动记住用户信息，支持增删改查和搜索 |
-| 💬 **多会话管理** | 创建/切换/删除对话，历史持久化 |
-| 🌤️ **天气查询** | 查询任意城市实时天气（免费，无需 API Key） |
-| 🔍 **联网搜索** | Bing 搜索获取最新信息 |
-| 📁 **文件上传** | 上传 TXT/PDF/代码等，AI 读取分析 |
-| 💬 **流式输出** | 逐 token 打字机效果 |
+| 💬 **多会话管理** | 创建/切换/删除对话，历史不丢失 |
+| 🌤️ **天气查询** | 输入城市名即可查实时天气（免费，无需 API Key） |
+| 🔍 **联网搜索** | 搜索互联网获取最新信息 |
+| 📁 **文件上传** | 上传 TXT/PDF/代码文件，自动读取并分析内容 |
+| 💬 **流式输出** | 逐字显示回复内容，打字机效果 |
 | 🔌 **多模型** | DeepSeek / OpenAI / Claude / Ollama 一键切换 |
-| 🌐 **Web 界面** | 美观的聊天界面 + 记忆/会话管理面板 |
+| 🌐 **Web 界面** | 聊天界面 + 记忆管理面板 + 会话列表 |
 
 ## 🐳 Docker 一键部署（推荐）
 
@@ -88,20 +86,20 @@ python -m pytest tests/ -v
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  ☰ 🧠 AI 智能助理     💾 3 条记忆    [GPT-4o-mini ▼] 🗑️│
+│  ☰ 智能对话助手     💾 3 条记忆    [GPT-4o-mini ▼] 🗑️  │
 ├──────────────┬──────────────────────────────────────────┤
 │ 🧠 记忆      │  👤 你                                   │
 │ ──────────   │  记住我喜欢喝冰美式                       │
 │ 🔍 搜索...   │                                          │
-│              │  🧠 AI 助理                              │
+│              │  ✨ 助手                                  │
 │ [偏好] ★★★★  │  好的，我记住了！📝                       │
 │  我喜欢喝冰美式│  你喜欢的饮料是冰美式                    │
 │  ✏️  🗑️     │                                          │
 │              │  👤 你                                   │
 │ [用户信息] ★★│  今天北京天气怎么样？                      │
 │  正在找实习   │                                          │
-│  ✏️  🗑️     │  🧠 AI 助理                              │
-│              │  🌤️ 北京: Sunny +30°C ...                │
+│  ✏️  🗑️     │  ✨ 助手                                  │
+│              │  🌤️ 北京: 晴 +30°C ...                   │
 │ [+ 添加...]  │                                          │
 │ 3 条记忆     │  ▷ 输入消息...                    [➤]    │
 └──────────────┴──────────────────────────────────────────┘
@@ -137,10 +135,10 @@ ai-assistant/
 ├── .env.example              # 环境变量模板
 ├── Dockerfile                # Docker 镜像构建
 ├── docker-compose.yml        # Docker Compose 编排
-├── memory/store.py           # SQLite 长期记忆存储
-├── tools/memory_tools.py     # 记忆 CRUD LangChain 工具
+├── memory/store.py           # SQLite 记忆存储
+├── tools/memory_tools.py     # 记忆增删改查工具
 ├── tools/weather_tools.py    # 天气查询工具
-├── agent/assistant.py        # LangGraph ReAct Agent
+├── agent/assistant.py        # 对话处理核心
 ├── tests/                    # 测试套件
 │   ├── test_memory_store.py  # 记忆存储测试
 │   └── test_session_store.py # 会话存储测试
@@ -153,11 +151,11 @@ ai-assistant/
 
 ## 技术栈
 
-- **LangChain + LangGraph** — Agent 编排与工具调用
+- **LangChain + LangGraph** — 对话流程编排与工具调度
 - **FastAPI** — REST API + SSE 流式传输
-- **SQLite** — 长期记忆持久化
-- **ReAct Agent** — 推理 + 工具调用
-- **wttr.in** — 免费天气 API
+- **SQLite** — 数据持久化存储
+- **ReAct 模式** — 推理与工具调用
+- **wttr.in** — 免费天气接口
 - **Vanilla JS** — 零依赖前端
 - **Docker** — 容器化部署
-- **GitHub Actions** — CI 自动化测试
+- **GitHub Actions** — 自动化测试

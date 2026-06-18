@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   🧠 AI 智能助理 — 前端逻辑 v1.1
+   🧠 智能对话助手 — 前端逻辑 v1.1
    会话管理 + 文件上传 + 记忆管理 + 流式对话
    ═══════════════════════════════════════════════ */
 
@@ -176,7 +176,7 @@ function showWelcome() {
   messagesEl.innerHTML = `
     <div class="welcome-message">
       <div class="welcome-icon">🧠</div>
-      <h2>你好！我是 AI 智能助理</h2>
+      <h2>你好！我是 智能对话助手</h2>
       <p>长期记忆 · 联网搜索 · 天气查询 · 文件上传</p>
       <div class="welcome-suggestions">
         <button class="suggestion-btn" data-msg="记住我喜欢喝冰美式，正在找实习">📝 记住我的信息</button>
@@ -308,7 +308,7 @@ async function sendMessage(message) {
   if (streaming || !message.trim()) return;
   streaming = true;
   sendBtn.disabled = true;
-  inputStatus.textContent = "🤖 AI 思考中...";
+  inputStatus.textContent = "🤖 思考中...";
 
   // 如果上传了文件内容，附加到消息里
   let finalMsg = message;
