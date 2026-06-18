@@ -1,8 +1,52 @@
 # 🧠 AI 智能助理 — 带长期记忆的全栈应用
 
+> **LangChain · LangGraph · FastAPI · SQLite · Docker**
+
 [![CI](https://github.com/fourting587/ai-assistant/actions/workflows/test.yml/badge.svg)](https://github.com/fourting587/ai-assistant/actions/workflows/test.yml)
 
-基于 **LangChain + LangGraph + FastAPI** 的 AI 助手，支持**长期记忆**（增删改查）、**天气查询** 和 **自然语言对话**，提供 REST API 和 Web 界面。
+---
+
+## ✨ 项目亮点（面向简历）
+
+### 核心技术
+
+| 模块 | 实现 |
+|------|------|
+| **Agent 智能体** | 基于 LangChain + LangGraph 构建 ReAct Agent，推理 + 工具调用全链路 |
+| **长期记忆** | SQLite 持久化记忆存储，支持增删改查、全文搜索、记忆统计 |
+| **多模型支持** | DeepSeek / OpenAI / Claude / Ollama 一键切换，配置驱动无侵入 |
+| **流式输出** | SSE (Server-Sent Events) 实现逐 token 打字机效果 |
+| **工具链** | 天气查询 (wttr.in)、联网搜索 (Bing)、文件上传分析、记忆 CRUD |
+| **REST API** | FastAPI 构建完整 API，Swagger 文档，12 个端点覆盖全部功能 |
+| **Web 界面** | 零依赖 Vanilla JS 前端，记忆面板 + 多会话管理 + 模型切换 |
+| **Docker 部署** | Docker Compose 一键部署，支持本地 Ollama 模型配置 |
+| **CI/CD** | GitHub Actions 自动运行测试，保障代码质量 |
+
+### 架构设计
+
+```
+用户输入 → [Web UI / API] → LangGraph ReAct Agent → [工具调用]
+                            ↕                          ↕
+                       推理循环                 记忆/天气/搜索/文件
+                            ↕
+                       SSE 流式输出
+```
+
+- **Agent 循环**：ReAct (Reasoning + Acting) 模式，Agent 自主推理 → 调用工具 → 观察结果 → 生成回复
+- **记忆系统**：自动提取和存储用户信息，下次对话自动注入上下文，实现跨会话长期记忆
+- **多会话管理**：独立会话上下文，历史持久化到 SQLite，支持创建/切换/删除
+
+### 面试对应知识点
+
+| 面试问题 | 项目对应 |
+|---------|---------|
+| 了解 LangChain 吗？ | 用 LangChain 的 Tool 抽象封装记忆/天气工具，LCEL 构建链 |
+| Agent 怎么工作的？ | ReAct Agent：LLM 输出 Thought/Action/Observation，LangGraph 编排循环 |
+| 怎么保证记忆准确？ | 记忆带 CRUD API，用户可直接编辑/删除，AI 提取+人工修正闭环 |
+| 多模型怎么切换？ | 工厂模式 + 配置驱动，运行时注入不同 LLM，不侵入 Agent 逻辑 |
+| 流式输出怎么实现？ | FastAPI SSE endpoint + `StreamingResponse` + 前端 EventSource |
+
+---
 
 ## 功能
 
@@ -115,10 +159,15 @@ ai-assistant/
 ├── main.py                   # CLI 入口（可选）
 ├── requirements.txt          # 依赖
 ├── .env.example              # 环境变量模板
+├── Dockerfile                # Docker 镜像构建
+├── docker-compose.yml        # Docker Compose 编排
 ├── memory/store.py           # SQLite 长期记忆存储
 ├── tools/memory_tools.py     # 记忆 CRUD LangChain 工具
 ├── tools/weather_tools.py    # 天气查询工具
 ├── agent/assistant.py        # LangGraph ReAct Agent
+├── tests/                    # 测试套件
+│   ├── test_memory_store.py  # 记忆存储测试
+│   └── test_session_store.py # 会话存储测试
 ├── static/                   # Web 前端
 │   ├── index.html            # 主页面
 │   ├── style.css             # 样式
@@ -134,3 +183,5 @@ ai-assistant/
 - **ReAct Agent** — 推理 + 工具调用
 - **wttr.in** — 免费天气 API
 - **Vanilla JS** — 零依赖前端
+- **Docker** — 容器化部署
+- **GitHub Actions** — CI 自动化测试
