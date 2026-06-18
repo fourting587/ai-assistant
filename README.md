@@ -6,23 +6,9 @@
 
 ---
 
-## ✨ 项目亮点（面向简历）
+---
 
-### 核心技术
-
-| 模块 | 实现 |
-|------|------|
-| **Agent 智能体** | 基于 LangChain + LangGraph 构建 ReAct Agent，推理 + 工具调用全链路 |
-| **长期记忆** | SQLite 持久化记忆存储，支持增删改查、全文搜索、记忆统计 |
-| **多模型支持** | DeepSeek / OpenAI / Claude / Ollama 一键切换，配置驱动无侵入 |
-| **流式输出** | SSE (Server-Sent Events) 实现逐 token 打字机效果 |
-| **工具链** | 天气查询 (wttr.in)、联网搜索 (Bing)、文件上传分析、记忆 CRUD |
-| **REST API** | FastAPI 构建完整 API，Swagger 文档，12 个端点覆盖全部功能 |
-| **Web 界面** | 零依赖 Vanilla JS 前端，记忆面板 + 多会话管理 + 模型切换 |
-| **Docker 部署** | Docker Compose 一键部署，支持本地 Ollama 模型配置 |
-| **CI/CD** | GitHub Actions 自动运行测试，保障代码质量 |
-
-### 架构设计
+## 架构设计
 
 ```
 用户输入 → [Web UI / API] → LangGraph ReAct Agent → [工具调用]
@@ -35,16 +21,6 @@
 - **Agent 循环**：ReAct (Reasoning + Acting) 模式，Agent 自主推理 → 调用工具 → 观察结果 → 生成回复
 - **记忆系统**：自动提取和存储用户信息，下次对话自动注入上下文，实现跨会话长期记忆
 - **多会话管理**：独立会话上下文，历史持久化到 SQLite，支持创建/切换/删除
-
-### 面试对应知识点
-
-| 面试问题 | 项目对应 |
-|---------|---------|
-| 了解 LangChain 吗？ | 用 LangChain 的 Tool 抽象封装记忆/天气工具，LCEL 构建链 |
-| Agent 怎么工作的？ | ReAct Agent：LLM 输出 Thought/Action/Observation，LangGraph 编排循环 |
-| 怎么保证记忆准确？ | 记忆带 CRUD API，用户可直接编辑/删除，AI 提取+人工修正闭环 |
-| 多模型怎么切换？ | 工厂模式 + 配置驱动，运行时注入不同 LLM，不侵入 Agent 逻辑 |
-| 流式输出怎么实现？ | FastAPI SSE endpoint + `StreamingResponse` + 前端 EventSource |
 
 ---
 
